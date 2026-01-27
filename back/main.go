@@ -2,12 +2,22 @@ package main
 
 import (
 	"log"
+	"os"
 
-	"github.com/mrbastim/go-final-project/back/db"
+	"github.com/joho/godotenv"
+
+	"main/back/db"
 )
 
 func main() {
-	conn, err := db.OpenAndInit("scheduler.db")
+	_ = godotenv.Load()
+
+	dbFile := "scheduler.db"
+	if fromEnv := os.Getenv("TODO_DBFILE"); fromEnv != "" {
+		dbFile = fromEnv
+	}
+
+	conn, err := db.OpenAndInit(dbFile)
 	if err != nil {
 		log.Fatalf("db init failed: %v", err)
 	}
