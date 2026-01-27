@@ -1,0 +1,9 @@
+# Runtime SQLite database
+scheduler.db
+
+# SQLite temporary files (if WAL mode is enabled later)
+scheduler.db-wal
+scheduler.db-shm
+
+# env
+.env
