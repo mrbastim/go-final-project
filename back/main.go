@@ -7,6 +7,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"main/back/db"
+	"main/back/server"
 )
 
 func main() {
@@ -24,5 +25,7 @@ func main() {
 	defer conn.Close()
 
 	log.Println("DB ready")
-	// TODO: запуск HTTP-сервера (в следующих шагах проекта).
+	if err := server.Run(conn); err != nil {
+		log.Fatalf("server failed: %v", err)
+	}
 }
