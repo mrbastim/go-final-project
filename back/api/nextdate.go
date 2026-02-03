@@ -27,6 +27,8 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 		return "", errors.New("repeat rule is empty")
 	}
 
+	baseYear, baseMonth, baseDay := date.Date()
+
 	switch parts[0] {
 	case "d":
 		if len(parts) != 2 {
@@ -36,16 +38,23 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 		if err != nil || interval < 1 || interval > 400 {
 			return "", errors.New("invalid daily interval")
 		}
-		for !afterNow(date, now) {
+		for {
 			date = date.AddDate(0, 0, interval)
+			if afterNow(date, now) {
+				break
+			}
 		}
 		return date.Format(dateLayout), nil
 	case "y":
 		if len(parts) != 1 {
 			return "", errors.New("invalid yearly repeat format")
 		}
-		for !afterNow(date, now) {
-			date = date.AddDate(1, 0, 0)
+		for {
+			baseYear++
+			date = time.Date(baseYear, baseMonth, baseDay, 0, 0, 0, 0, time.Local)
+			if afterNow(date, now) {
+				break
+			}
 		}
 		return date.Format(dateLayout), nil
 	case "w":
@@ -56,6 +65,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 		if err != nil {
 			return "", err
 		}
+		date = date.AddDate(0, 0, 1)
 		for {
 			if afterNow(date, now) && weekdays[weekdayNumber(date)] {
 				return date.Format(dateLayout), nil
@@ -77,6 +87,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 				return "", err
 			}
 		}
+		date = date.AddDate(0, 0, 1)
 		for {
 			if afterNow(date, now) && months[int(date.Month())] && matchMonthDay(date, daysRule) {
 				return date.Format(dateLayout), nil
