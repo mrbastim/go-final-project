@@ -21,9 +21,6 @@ CREATE TABLE IF NOT EXISTS scheduler (
 CREATE INDEX IF NOT EXISTS idx_scheduler_date ON scheduler(date);
 `
 
-// OpenAndInit opens (and if needed creates) SQLite DB file and ensures required schema exists.
-// The schema is kept intentionally generic so the same DB can be used by the web server
-// and by other CLI utilities.
 func OpenAndInit(dbFile string) (*sql.DB, error) {
 	_, err := os.Stat(dbFile)
 	install := err != nil
