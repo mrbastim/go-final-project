@@ -21,23 +21,27 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 	var task db.Task
 	if err := json.NewDecoder(r.Body).Decode(&task); err != nil {
-		http.Error(w, "Bad Request: "+err.Error(), http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		writeJson(w, map[string]string{"error": "Invalid JSON: " + err.Error()})
 		return
 	}
 
 	if strings.TrimSpace(task.Title) == "" {
-		http.Error(w, "Bad Request: title is required", http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		writeJson(w, map[string]string{"error": "Title is required"})
 		return
 	}
 
 	if err := checkDate(&task); err != nil {
-		http.Error(w, "Bad Request: "+err.Error(), http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
+		writeJson(w, map[string]string{"error": err.Error()})
 		return
 	}
 
 	id, err := db.AddTask(DB, task)
 	if err != nil {
-		http.Error(w, "Internal Server Error: "+err.Error(), http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
+		writeJson(w, map[string]string{"error": "Failed to add task: " + err.Error()})
 		return
 	}
 
@@ -47,6 +51,10 @@ func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 
 func checkDate(task *db.Task) error {
 	now := time.Now()
+
+	if task.Date == "" {
+		task.Date = now.Format(dateLayout)
+	}
 
 	t, err := time.ParseInLocation(dateLayout, task.Date, time.Local)
 	if err != nil {
