@@ -9,6 +9,14 @@ import (
 	_ "modernc.org/sqlite"
 )
 
+type Task struct {
+	ID      string `json:"id"`
+	Date    string `json:date`
+	Title   string `json:"title"`
+	Comment string `json:"comment"`
+	Repeat  string `json:"repeat"`
+}
+
 const schemaSQL = `
 CREATE TABLE IF NOT EXISTS scheduler (
 	id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -61,4 +69,20 @@ func schemaInstalled(db *sql.DB) (bool, error) {
 		return false, err
 	}
 	return name == "scheduler", nil
+}
+
+func AddTask(db *sql.DB, task Task) (int32, error) {
+	query := `INSERT INTO scheduler (date, title, comment, repeat) VALUES (?, ?, ?, ?)`
+	result, err := db.Exec(query, task.Date, task.Title, task.Comment, task.Repeat)
+	if err != nil {
+		return 0, err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+
+	return int32(id), nil
+
 }

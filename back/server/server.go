@@ -3,12 +3,11 @@ package server
 import (
 	"database/sql"
 	"fmt"
+	"main/back/api"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
-
-	"main/back/api"
 )
 
 const defaultPort = 7540
@@ -18,7 +17,7 @@ var DB *sql.DB
 func Run(db *sql.DB) error {
 	DB = db
 
-	api.Init()
+	api.Init(DB)
 
 	webDir, err := findWebDir()
 	if err != nil {
