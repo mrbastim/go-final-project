@@ -2,15 +2,30 @@ package api
 
 import (
 	"encoding/json"
-	"errors"
 	"main/back/db"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type TasksResponse struct {
 	Tasks []db.Task `json:"tasks"`
+}
+
+func taskHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		addTaskHandler(w, r)
+	case http.MethodGet:
+		getTaskHandler(w, r)
+	case http.MethodPut:
+		updateTaskHandler(w, r)
+	case http.MethodDelete:
+		deleteTaskHandler(w, r)
+	default:
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+	}
 }
 
 func getTasksHandler(w http.ResponseWriter, r *http.Request) {
@@ -73,7 +88,6 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Проверяем, существует ли задача
 	existingTask, err := db.GetTaskByID(DB, strconv.Itoa(id))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -143,47 +157,73 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
 	writeJson(w, map[string]string{})
 }
 
-func parseTaskID(value interface{}) (int, error) {
-	if value == nil {
-		return 0, errors.New("ID is required")
+func taskDoneHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		writeJson(w, map[string]string{"error": "ID is required"})
+		return
 	}
 
-	switch v := value.(type) {
-	case string:
-		v = strings.TrimSpace(v)
-		if v == "" {
-			return 0, errors.New("ID is required")
-		}
-		id, err := strconv.Atoi(v)
-		if err != nil || id <= 0 {
-			return 0, errors.New("Invalid ID")
-		}
-		return id, nil
-	case json.Number:
-		id64, err := v.Int64()
-		if err != nil || id64 <= 0 {
-			return 0, errors.New("Invalid ID")
-		}
-		return int(id64), nil
-	case float64:
-		id64 := int64(v)
-		if v != float64(id64) || id64 <= 0 {
-			return 0, errors.New("Invalid ID")
-		}
-		return int(id64), nil
-	default:
-		return 0, errors.New("Invalid ID type")
+	task, err := db.GetTaskByID(DB, id)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		writeJson(w, map[string]string{"error": "Failed to retrieve task: " + err.Error()})
+		return
 	}
+	if task == nil {
+		w.WriteHeader(http.StatusNotFound)
+		writeJson(w, map[string]string{"error": "Task not found"})
+		return
+	}
+
+	if strings.TrimSpace(task.Repeat) == "" {
+		err = db.DeleteTask(DB, id)
+	} else {
+		next, errNext := NextDate(time.Now(), task.Date, task.Repeat)
+		if errNext != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			writeJson(w, map[string]string{"error": errNext.Error()})
+			return
+		}
+		task.Date = next
+		err = db.UpdateTask(DB, *task)
+	}
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		writeJson(w, map[string]string{"error": "Failed to update task: " + err.Error()})
+		return
+	}
+
+	writeJson(w, map[string]string{})
 }
 
-func getStringField(payload map[string]interface{}, key string) (string, error) {
-	value, ok := payload[key]
-	if !ok || value == nil {
-		return "", nil
+func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		writeJson(w, map[string]string{"error": "ID is required"})
+		return
 	}
-	str, ok := value.(string)
-	if !ok {
-		return "", errors.New("Invalid " + key)
+
+	task, err := db.GetTaskByID(DB, id)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		writeJson(w, map[string]string{"error": "Failed to retrieve task: " + err.Error()})
+		return
 	}
-	return str, nil
+	if task == nil {
+		w.WriteHeader(http.StatusNotFound)
+		writeJson(w, map[string]string{"error": "Task not found"})
+		return
+	}
+
+	err = db.DeleteTask(DB, id)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		writeJson(w, map[string]string{"error": "Failed to delete task: " + err.Error()})
+		return
+	}
+
+	writeJson(w, map[string]string{})
 }

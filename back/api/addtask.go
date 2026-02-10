@@ -9,17 +9,36 @@ import (
 	"time"
 )
 
-func taskHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodPost:
-		addTaskHandler(w, r)
-	case http.MethodGet:
-		getTaskHandler(w, r)
-	case http.MethodPut:
-		updateTaskHandler(w, r)
-	default:
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+func checkDate(task *db.Task) error {
+	now := time.Now()
+
+	if task.Date == "" {
+		task.Date = now.Format(dateLayout)
 	}
+
+	t, err := time.ParseInLocation(dateLayout, task.Date, time.Local)
+	if err != nil {
+		return errors.New("invalid date format")
+	}
+
+	var next string
+
+	if len(strings.TrimSpace(task.Repeat)) > 0 {
+		next, err = NextDate(now, task.Date, task.Repeat)
+		if err != nil {
+			return errors.New("invalid repeat format")
+		}
+	}
+
+	if afterNow(now, t) {
+		if len(strings.TrimSpace(task.Repeat)) == 0 {
+			task.Date = now.Format(dateLayout)
+		} else {
+			task.Date = next
+		}
+	}
+
+	return nil
 }
 
 func addTaskHandler(w http.ResponseWriter, r *http.Request) {
@@ -51,36 +70,4 @@ func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 	writeJson(w, map[string]int32{"id": id})
-}
-
-func checkDate(task *db.Task) error {
-	now := time.Now()
-
-	if task.Date == "" {
-		task.Date = now.Format(dateLayout)
-	}
-
-	t, err := time.ParseInLocation(dateLayout, task.Date, time.Local)
-	if err != nil {
-		return errors.New("invalid date format")
-	}
-
-	var next string
-
-	if len(strings.TrimSpace(task.Repeat)) > 0 {
-		next, err = NextDate(now, task.Date, task.Repeat)
-		if err != nil {
-			return errors.New("invalid repeat format")
-		}
-	}
-
-	if afterNow(now, t) {
-		if len(strings.TrimSpace(task.Repeat)) == 0 {
-			task.Date = now.Format(dateLayout)
-		} else {
-			task.Date = next
-		}
-	}
-
-	return nil
 }

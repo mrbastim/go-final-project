@@ -101,3 +101,8 @@ func UpdateTask(db *sql.DB, task Task) error {
 
 	return tx.Commit()
 }
+
+func DeleteTask(db *sql.DB, id string) error {
+	_, err := db.Exec(`DELETE FROM scheduler WHERE id = ?`, id)
+	return err
+}
