@@ -15,6 +15,8 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 		addTaskHandler(w, r)
 	case http.MethodGet:
 		getTaskHandler(w, r)
+	case http.MethodPut:
+		updateTaskHandler(w, r)
 	default:
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 	}
@@ -81,28 +83,4 @@ func checkDate(task *db.Task) error {
 	}
 
 	return nil
-}
-
-func getTaskHandler(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Query().Get("id")
-	if id == "" {
-		w.WriteHeader(http.StatusBadRequest)
-		writeJson(w, map[string]string{"error": "ID is required"})
-		return
-	}
-
-	task, err := db.GetTaskByID(DB, id)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		writeJson(w, map[string]string{"error": "Failed to retrieve task: " + err.Error()})
-		return
-	}
-
-	if task == nil {
-		w.WriteHeader(http.StatusNotFound)
-		writeJson(w, map[string]string{"error": "Task not found"})
-		return
-	}
-
-	writeJson(w, task)
 }
