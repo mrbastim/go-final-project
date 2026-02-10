@@ -10,7 +10,25 @@ import (
 )
 
 type TasksResponse struct {
-	Tasks []db.Task `json:"tasks"`
+	Tasks []TaskResponse `json:"tasks"`
+}
+
+type TaskResponse struct {
+	ID      string `json:"id"`
+	Date    string `json:"date"`
+	Title   string `json:"title"`
+	Comment string `json:"comment"`
+	Repeat  string `json:"repeat"`
+}
+
+func toTaskResponse(task db.Task) TaskResponse {
+	return TaskResponse{
+		ID:      strconv.Itoa(task.ID),
+		Date:    task.Date,
+		Title:   task.Title,
+		Comment: task.Comment,
+		Repeat:  task.Repeat,
+	}
 }
 
 func taskHandler(w http.ResponseWriter, r *http.Request) {
@@ -40,10 +58,16 @@ func getTasksHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if tasks == nil {
-		tasks = []db.Task{}
+		writeJson(w, TasksResponse{Tasks: []TaskResponse{}})
+		return
 	}
 
-	writeJson(w, TasksResponse{Tasks: tasks})
+	resp := make([]TaskResponse, 0, len(tasks))
+	for _, task := range tasks {
+		resp = append(resp, toTaskResponse(task))
+	}
+
+	writeJson(w, TasksResponse{Tasks: resp})
 }
 
 func getTaskHandler(w http.ResponseWriter, r *http.Request) {
@@ -67,7 +91,7 @@ func getTaskHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJson(w, task)
+	writeJson(w, toTaskResponse(*task))
 }
 
 func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
