@@ -137,3 +137,17 @@ func GetTasks(db *sql.DB, search string, limit int) ([]Task, error) {
 
 	return tasks, nil
 }
+
+func GetTaskByID(db *sql.DB, id string) (*Task, error) {
+	var t Task
+	err := db.QueryRow(`SELECT id, date, title, comment, repeat FROM scheduler WHERE id = ?`, id).
+		Scan(&t.ID, &t.Date, &t.Title, &t.Comment, &t.Repeat)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return &t, nil
+}
