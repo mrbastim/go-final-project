@@ -7,7 +7,8 @@ import (
 	"time"
 )
 
-const dateLayout = "20060102"
+const queryLayout = "20060102"
+const dateLayout = "02.01.2006"
 
 func AddTask(db *sql.DB, task Task) (int32, error) {
 	query := `INSERT INTO scheduler (date, title, comment, repeat) VALUES (?, ?, ?, ?)`
@@ -35,8 +36,8 @@ func GetTasks(db *sql.DB, search string, limit int) ([]Task, error) {
 
 	search = strings.TrimSpace(search)
 
-	if t, errDate := time.Parse("02.01.2006", search); errDate == nil {
-		dateStr := t.Format(dateLayout)
+	if t, errDate := time.Parse(dateLayout, search); errDate == nil {
+		dateStr := t.Format(queryLayout)
 		rows, err = db.Query(`SELECT 
 		id, date, title, comment, repeat FROM scheduler 
 		WHERE date = ? ORDER BY date LIMIT ?`,

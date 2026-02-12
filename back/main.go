@@ -20,13 +20,15 @@ func main() {
 
 	conn, err := db.OpenAndInit(dbFile)
 	if err != nil {
-		log.Fatalf("db init failed: %v", err)
+		log.Printf("db init failed: %v", err)
+		return
 	}
 	defer conn.Close()
 
 	log.Println("DB ready")
 	if err := server.Run(conn); err != nil {
-		log.Fatalf("server failed: %v", err)
+		log.Printf("server failed: %v", err)
+		return
 	}
-	
+
 }
