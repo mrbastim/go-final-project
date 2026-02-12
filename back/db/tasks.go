@@ -8,7 +8,7 @@ import (
 )
 
 type Storage struct {
-	DB *sql.DB
+	db *sql.DB
 }
 
 type TaskStorage interface {
@@ -20,15 +20,17 @@ type TaskStorage interface {
 }
 
 func NewStorage(db *sql.DB) *Storage {
-	return &Storage{DB: db}
+	return &Storage{db: db}
 }
 
-const queryLayout = "20060102"
-const dateLayout = "02.01.2006"
+const (
+	queryLayout = "20060102"
+	dateLayout  = "02.01.2006"
+)
 
 func (s *Storage) AddTask(task Task) (int32, error) {
 	query := `INSERT INTO scheduler (date, title, comment, repeat) VALUES (?, ?, ?, ?)`
-	result, err := s.DB.Exec(query, task.Date, task.Title, task.Comment, task.Repeat)
+	result, err := s.db.Exec(query, task.Date, task.Title, task.Comment, task.Repeat)
 	if err != nil {
 		return 0, err
 	}
@@ -44,7 +46,7 @@ func (s *Storage) AddTask(task Task) (int32, error) {
 
 func (s *Storage) GetTasks(search string, limit int) ([]Task, error) {
 	if limit <= 0 {
-		const limit = 100
+		limit = 100
 	}
 
 	var rows *sql.Rows
@@ -55,18 +57,18 @@ func (s *Storage) GetTasks(search string, limit int) ([]Task, error) {
 
 	switch {
 	case search == "":
-		rows, err = s.DB.Query(`SELECT 
+		rows, err = s.db.Query(`SELECT 
 		id, date, title, comment, repeat FROM scheduler 
 		ORDER BY date LIMIT ?`, limit)
 	case dateErr == nil:
 		dateStr := parsedDate.Format(queryLayout)
-		rows, err = s.DB.Query(`SELECT 
+		rows, err = s.db.Query(`SELECT 
 		id, date, title, comment, repeat FROM scheduler 
 		WHERE date = ? ORDER BY date LIMIT ?`,
 			dateStr, limit)
 	default:
 		likePattern := "%" + search + "%"
-		rows, err = s.DB.Query(`SELECT 
+		rows, err = s.db.Query(`SELECT 
 		id, date, title, comment, repeat FROM scheduler 
 		WHERE title LIKE ? OR comment LIKE ? ORDER BY date LIMIT ?`,
 			likePattern, likePattern, limit)
@@ -95,7 +97,7 @@ func (s *Storage) GetTasks(search string, limit int) ([]Task, error) {
 
 func (s *Storage) GetTaskByID(id string) (*Task, error) {
 	t := &Task{}
-	err := s.DB.QueryRow(`SELECT id, date, title, comment, repeat FROM scheduler WHERE id = ?`, id).
+	err := s.db.QueryRow(`SELECT id, date, title, comment, repeat FROM scheduler WHERE id = ?`, id).
 		Scan(&t.ID, &t.Date, &t.Title, &t.Comment, &t.Repeat)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, nil
@@ -108,7 +110,7 @@ func (s *Storage) GetTaskByID(id string) (*Task, error) {
 }
 
 func (s *Storage) UpdateTask(task Task) error {
-	tx, err := s.DB.Begin()
+	tx, err := s.db.Begin()
 	if err != nil {
 		return err
 	}
@@ -124,6 +126,6 @@ func (s *Storage) UpdateTask(task Task) error {
 }
 
 func (s *Storage) DeleteTask(id string) error {
-	_, err := s.DB.Exec(`DELETE FROM scheduler WHERE id = ?`, id)
+	_, err := s.db.Exec(`DELETE FROM scheduler WHERE id = ?`, id)
 	return err
 }

@@ -30,7 +30,7 @@ func checkDate(task *db.Task) error {
 		}
 	}
 
-	if afterNow(now, t) {
+	if beforeNow(t, now) {
 		if len(strings.TrimSpace(task.Repeat)) == 0 {
 			task.Date = now.Format(dateLayout)
 		} else {

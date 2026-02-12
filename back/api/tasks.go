@@ -52,6 +52,11 @@ func taskHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func getTasksHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		writeJson(w, map[string]string{"error": "Method not allowed"})
+		return
+	}
 
 	search := r.URL.Query().Get("search")
 
@@ -234,12 +239,6 @@ func taskDoneHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodDelete {
-		w.WriteHeader(http.StatusMethodNotAllowed)
-		writeJson(w, map[string]string{"error": "Method not allowed"})
-		return
-	}
-
 	id := r.URL.Query().Get("id")
 	if id == "" {
 		w.WriteHeader(http.StatusBadRequest)

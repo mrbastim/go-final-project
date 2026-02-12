@@ -9,7 +9,6 @@ import (
 	"time"
 )
 
-
 func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 	repeat = strings.TrimSpace(repeat)
 	if repeat == "" {
@@ -143,6 +142,10 @@ func dayOnly(t time.Time) time.Time {
 
 func afterNow(date time.Time, now time.Time) bool {
 	return dayOnly(date).After(dayOnly(now))
+}
+
+func beforeNow(date time.Time, now time.Time) bool {
+	return dayOnly(date).Before(dayOnly(now))
 }
 
 func weekdayNumber(date time.Time) int {
