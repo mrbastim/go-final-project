@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+const dateLayout = "20060102"
+
 func AddTask(db *sql.DB, task Task) (int32, error) {
 	query := `INSERT INTO scheduler (date, title, comment, repeat) VALUES (?, ?, ?, ?)`
 	result, err := db.Exec(query, task.Date, task.Title, task.Comment, task.Repeat)
@@ -25,7 +27,7 @@ func AddTask(db *sql.DB, task Task) (int32, error) {
 
 func GetTasks(db *sql.DB, search string, limit int) ([]Task, error) {
 	if limit <= 0 {
-		limit = 100
+		const limit = 100
 	}
 
 	var rows *sql.Rows
@@ -34,12 +36,13 @@ func GetTasks(db *sql.DB, search string, limit int) ([]Task, error) {
 	search = strings.TrimSpace(search)
 
 	if t, errDate := time.Parse("02.01.2006", search); errDate == nil {
-		dateStr := t.Format("20060102")
+		dateStr := t.Format(dateLayout)
 		rows, err = db.Query(`SELECT 
 		id, date, title, comment, repeat FROM scheduler 
 		WHERE date = ? ORDER BY date LIMIT ?`,
 			dateStr, limit)
-	} else if search != "" {
+	}
+	if search != "" {
 		likePattern := "%" + search + "%"
 		rows, err = db.Query(`SELECT 
 		id, date, title, comment, repeat FROM scheduler 
@@ -73,7 +76,7 @@ func GetTasks(db *sql.DB, search string, limit int) ([]Task, error) {
 }
 
 func GetTaskByID(db *sql.DB, id string) (*Task, error) {
-	var t Task
+	t := &Task{}
 	err := db.QueryRow(`SELECT id, date, title, comment, repeat FROM scheduler WHERE id = ?`, id).
 		Scan(&t.ID, &t.Date, &t.Title, &t.Comment, &t.Repeat)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -83,7 +86,7 @@ func GetTaskByID(db *sql.DB, id string) (*Task, error) {
 		return nil, err
 	}
 
-	return &t, nil
+	return t, nil
 }
 
 func UpdateTask(db *sql.DB, task Task) error {

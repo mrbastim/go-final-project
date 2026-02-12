@@ -7,7 +7,7 @@ RUN go mod download
 COPY back ./back
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /out/todo ./back
 
-FROM ubuntu:latest
+FROM alpine:latest
 
 WORKDIR /app
 COPY --from=builder /out/todo /app/todo

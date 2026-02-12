@@ -9,7 +9,6 @@ import (
 	"time"
 )
 
-const dateLayout = "20060102"
 
 func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 	repeat = strings.TrimSpace(repeat)
@@ -100,6 +99,12 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 }
 
 func nextDateHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		writeJson(w, map[string]string{"error": "Method not allowed"})
+		return
+	}
+
 	nowStr := strings.TrimSpace(r.FormValue("now"))
 	dateStr := strings.TrimSpace(r.FormValue("date"))
 	repeat := strings.TrimSpace(r.FormValue("repeat"))

@@ -12,12 +12,9 @@ import (
 
 const defaultPort = 7540
 
-var DB *sql.DB
-
 func Run(db *sql.DB) error {
-	DB = db
 
-	api.Init(DB)
+	api.Init(db)
 
 	webDir, err := findWebDir()
 	if err != nil {

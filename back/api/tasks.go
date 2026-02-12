@@ -9,6 +9,11 @@ import (
 	"time"
 )
 
+const (
+	dateLayout = "20060102"
+	limit      = 50
+)
+
 type TasksResponse struct {
 	Tasks []TaskResponse `json:"tasks"`
 }
@@ -50,7 +55,7 @@ func getTasksHandler(w http.ResponseWriter, r *http.Request) {
 
 	search := r.URL.Query().Get("search")
 
-	tasks, err := db.GetTasks(DB, search, 50)
+	tasks, err := db.GetTasks(DB, search, limit)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		writeJson(w, map[string]string{"error": "Failed to retrieve tasks: " + err.Error()})
@@ -182,6 +187,12 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func taskDoneHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		writeJson(w, map[string]string{"error": "Method not allowed"})
+		return
+	}
+
 	id := r.URL.Query().Get("id")
 	if id == "" {
 		w.WriteHeader(http.StatusBadRequest)
@@ -223,6 +234,12 @@ func taskDoneHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		writeJson(w, map[string]string{"error": "Method not allowed"})
+		return
+	}
+
 	id := r.URL.Query().Get("id")
 	if id == "" {
 		w.WriteHeader(http.StatusBadRequest)
