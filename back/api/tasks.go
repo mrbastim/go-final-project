@@ -55,7 +55,7 @@ func getTasksHandler(w http.ResponseWriter, r *http.Request) {
 
 	search := r.URL.Query().Get("search")
 
-	tasks, err := db.GetTasks(DB, search, limit)
+	tasks, err := storage.GetTasks(search, limit)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		writeJson(w, map[string]string{"error": "Failed to retrieve tasks: " + err.Error()})
@@ -83,7 +83,7 @@ func getTaskHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := db.GetTaskByID(DB, id)
+	task, err := storage.GetTaskByID(id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		writeJson(w, map[string]string{"error": "Failed to retrieve task: " + err.Error()})
@@ -117,7 +117,7 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	existingTask, err := db.GetTaskByID(DB, strconv.Itoa(id))
+	existingTask, err := storage.GetTaskByID(strconv.Itoa(id))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		writeJson(w, map[string]string{"error": "Failed to check task: " + err.Error()})
@@ -176,7 +176,7 @@ func updateTaskHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.UpdateTask(DB, task)
+	err = storage.UpdateTask(task)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		writeJson(w, map[string]string{"error": "Failed to update task: " + err.Error()})
@@ -200,7 +200,7 @@ func taskDoneHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := db.GetTaskByID(DB, id)
+	task, err := storage.GetTaskByID(id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		writeJson(w, map[string]string{"error": "Failed to retrieve task: " + err.Error()})
@@ -213,7 +213,7 @@ func taskDoneHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if strings.TrimSpace(task.Repeat) == "" {
-		err = db.DeleteTask(DB, id)
+		err = storage.DeleteTask(id)
 	} else {
 		next, errNext := NextDate(time.Now(), task.Date, task.Repeat)
 		if errNext != nil {
@@ -222,7 +222,7 @@ func taskDoneHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		task.Date = next
-		err = db.UpdateTask(DB, *task)
+		err = storage.UpdateTask(*task)
 	}
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -247,7 +247,7 @@ func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	task, err := db.GetTaskByID(DB, id)
+	task, err := storage.GetTaskByID(id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		writeJson(w, map[string]string{"error": "Failed to retrieve task: " + err.Error()})
@@ -259,7 +259,7 @@ func deleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = db.DeleteTask(DB, id)
+	err = storage.DeleteTask(id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		writeJson(w, map[string]string{"error": "Failed to delete task: " + err.Error()})

@@ -1,14 +1,11 @@
 package api
 
 import (
-	"database/sql"
+	"main/back/db"
 	"net/http"
 )
 
-var DB *sql.DB
-
-func Init(db *sql.DB) {
-	DB = db
+func Init(storage db.TaskStorage) {
 	http.HandleFunc("/api/nextdate", nextDateHandler)
 	http.HandleFunc("/api/task", taskHandler)
 	http.HandleFunc("/api/task/done", taskDoneHandler)

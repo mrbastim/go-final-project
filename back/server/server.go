@@ -1,9 +1,9 @@
 package server
 
 import (
-	"database/sql"
 	"fmt"
 	"main/back/api"
+	"main/back/db"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -12,9 +12,9 @@ import (
 
 const defaultPort = 7540
 
-func Run(db *sql.DB) error {
+func Run(storage db.TaskStorage) error {
 
-	api.Init(db)
+	api.Init(storage)
 
 	webDir, err := findWebDir()
 	if err != nil {

@@ -24,9 +24,10 @@ func main() {
 		return
 	}
 	defer conn.Close()
+	storage := db.NewStorage(conn)
 
 	log.Println("DB ready")
-	if err := server.Run(conn); err != nil {
+	if err := server.Run(storage); err != nil {
 		log.Printf("server failed: %v", err)
 		return
 	}
