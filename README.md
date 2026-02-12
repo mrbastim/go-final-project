@@ -20,7 +20,7 @@ TODO_DBFILE=./scheduler.db
 2. Запустите сервер из корня проекта:
 
 ```bash
-go run ./back
+go run ./cmd
 ```
 
 Адрес в браузере: http://localhost:7540/ (порт берется из `TODO_PORT`).

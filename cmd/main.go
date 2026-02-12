@@ -1,4 +1,4 @@
-package main
+package cmd
 
 import (
 	"log"
@@ -24,6 +24,7 @@ func main() {
 		return
 	}
 	defer conn.Close()
+
 	storage := db.NewStorage(conn)
 
 	log.Println("DB ready")
@@ -31,5 +32,4 @@ func main() {
 		log.Printf("server failed: %v", err)
 		return
 	}
-
 }
