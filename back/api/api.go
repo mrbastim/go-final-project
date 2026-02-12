@@ -5,7 +5,10 @@ import (
 	"net/http"
 )
 
-func Init(storage db.TaskStorage) {
+var storage db.TaskStorage
+
+func Init(taskStorage db.TaskStorage) {
+	storage = taskStorage
 	http.HandleFunc("/api/nextdate", nextDateHandler)
 	http.HandleFunc("/api/task", taskHandler)
 	http.HandleFunc("/api/task/done", taskDoneHandler)

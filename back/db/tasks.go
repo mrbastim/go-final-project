@@ -44,31 +44,32 @@ func (s *Storage) AddTask(task Task) (int32, error) {
 
 func (s *Storage) GetTasks(search string, limit int) ([]Task, error) {
 	if limit <= 0 {
-		const limit = 100
+		limit = 100
 	}
 
 	var rows *sql.Rows
 	var err error
 
 	search = strings.TrimSpace(search)
+	parsedDate, dateErr := time.Parse(dateLayout, search)
 
-	if t, errDate := time.Parse(dateLayout, search); errDate == nil {
-		dateStr := t.Format(queryLayout)
+	switch {
+	case search == "":
+		rows, err = s.DB.Query(`SELECT 
+		id, date, title, comment, repeat FROM scheduler 
+		ORDER BY date LIMIT ?`, limit)
+	case dateErr == nil:
+		dateStr := parsedDate.Format(queryLayout)
 		rows, err = s.DB.Query(`SELECT 
 		id, date, title, comment, repeat FROM scheduler 
 		WHERE date = ? ORDER BY date LIMIT ?`,
 			dateStr, limit)
-	}
-	if search != "" {
+	default:
 		likePattern := "%" + search + "%"
 		rows, err = s.DB.Query(`SELECT 
 		id, date, title, comment, repeat FROM scheduler 
 		WHERE title LIKE ? OR comment LIKE ? ORDER BY date LIMIT ?`,
 			likePattern, likePattern, limit)
-	} else {
-		rows, err = s.DB.Query(`SELECT 
-		id, date, title, comment, repeat FROM scheduler 
-		ORDER BY date LIMIT ?`, limit)
 	}
 
 	if err != nil {
