@@ -44,7 +44,7 @@ func (s *Storage) AddTask(task Task) (int32, error) {
 
 func (s *Storage) GetTasks(search string, limit int) ([]Task, error) {
 	if limit <= 0 {
-		limit = 100
+		const limit = 100
 	}
 
 	var rows *sql.Rows
